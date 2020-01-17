@@ -1,0 +1,44 @@
+language: python
+python:
+  - "3.7"
+
+services:
+  - docker
+
+env:  # N times sandboxes created and built by jobs
+  global:
+    - CURL_OPTION="--connect-timeout 1 --max-time 1 -s "
+  jobs:
+    - IS_BUILDER="true"
+    - IS_BUILDER="false"
+branches:
+  only:
+    - master
+    - devel
+
+before_install:
+  - curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64 && chmod +x container-structure-test-linux-amd64 && sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+  - >
+    scversion="stable" # or "v0.4.7", or "latest"
+    wget -qO- "https://storage.googleapis.com/shellcheck/shellcheck-${scversion?}.linux.x86_64.tar.xz" | tar -xJv
+    cp "shellcheck-${scversion}/shellcheck" /usr/local/bin/
+    shellcheck --version
+
+install:
+  - if [ "$IS_BUILDER" = "true" ]; then
+      make builder IS_BUILDER=$IS_BUILDER;
+    else
+      make build_slim IS_BUILDER=$IS_BUILDER;
+    fi
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - if [ "$IS_BUILDER" = "true" ]; then
+    make hub IS_BUILDER=$IS_BUILDER NAME=jtools-builder;
+    else
+    make hub IS_BUILDER=$IS_BUILDER;
+    fi
+
+script:
+  - docker ps -a
+
+
+#after_failure: docker logs prep-node
