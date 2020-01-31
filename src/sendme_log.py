@@ -378,14 +378,14 @@ def archive_zip2(filelist=[], zip_filename="archive.zip"):
 
     zip = zipfile.ZipFile(f'{zip_filename}', 'w')
 
-    spinner = Halo(text=f"Archive files - {zip_filename}", spinner='dots')
+    spinner = Halo(text=f"Archive files - {zip_filename}\n", spinner='dots')
     spinner.start()
     for filename in filelist:
         try:
-            print(f"filename={filename}")
+            print(f" -> {filename}")
             zip.write(filename,
                   os.path.relpath(filename),
-                  compress_type = zipfile.ZIP_DEFLATED)
+                  compress_type=zipfile.ZIP_DEFLATED)
         except Exception as e:
             cprint(f"[ERR] {e}")
             spinner.fail(f'Fail {e}')
@@ -415,6 +415,9 @@ def get_parser():
 
     parser.add_argument('--include-dir', metavar='include-dir', type=str,nargs="+",  help=f'include log directory location', default=None)
     parser.add_argument('--exclude-dir', metavar='exclude-dir', type=str,nargs="+",  help=f'exclude log directory location', default=None)
+
+    parser.add_argument('--remove', metavar='remove', type=str, help=f'remove option', default=True)
+
     parser.add_argument('-td', '--target-date',  type=str, choices=["all", "today"], help=f'upload target date', default=f'today')
     parser.add_argument('-n', '--name',  type=str, help=f'Set filename for upload ', default=None)
     parser.add_argument('-u', '--upload', action='count', help=f'force upload mode', default=0)
@@ -573,15 +576,18 @@ if __name__ == '__main__':
                  b"EWuSuCcdK9LlnKVuL2qc_ITkVMQ5lgl-gNcgKCrqQS7xMTB"
     parser = get_parser()
     args = parser.parse_args()
+
     exclude_dir = [".score_data", ".storage", ".git"]
     banner()
-    if args.exclude_dir is not None:
-        exclude_dir = exclude_dir + args.exclude_dir
-        if args.include_dir is not None:
-            print(args.include_dir)
-            exclude_dir = list(set(exclude_dir) - set(args.include_dir))
 
-        print(f"exclude_dir = {exclude_dir}")
+    if args.include_dir is not None:
+        print(args.include_dir)
+        exclude_dir = list(set(exclude_dir) - set(args.include_dir))
+
+    if args.exclude_dir is not None:
+        exclude_dir = list(set(exclude_dir + args.exclude_dir))
+
+    # print(f"exclude_dir = {exclude_dir}")
 
     try:
         main()
@@ -589,7 +595,7 @@ if __name__ == '__main__':
         cprint("\nKeyboardInterrupt","green")
         pass
     finally:
-        if upload_filename is not None and os.path.isfile(upload_filename):
+        if upload_filename is not None and os.path.isfile(upload_filename) and args.remove:
             print(f'Remove temporary zip file -> {upload_filename}')
             os.remove(upload_filename)
 

@@ -2,6 +2,15 @@
 
 A tool for managing PRep Node resources as docker container
 
+#### Latest docker tag
+[![latest tag](https://images.microbadger.com/badges/version/jinwoo/jtools.svg)](https://microbadger.com/images/jinwoo/jtools "microbadger.com")
+[![tag info](https://images.microbadger.com/badges/version/jinwoo/prep-node.svg)](https://microbadger.com/images/jinwoo/jtools "microbadger.com")
+
+
+#### Travis-build
+[![Master Build Status](https://travis-ci.org/JINWOO-J/jtools.svg?branch=master)](https://travis-ci.org/JINWOO-J/jtools) 
+[![Build History](https://buildstats.info/travisci/chart/jinwoo-j/jtools?branch=master&includeBuildsFromPullRequest=false&buildCount=30)](https://travis-ci.org/jinwoo-j/jtools)
+
 ## What's jtools
 
 We've made it easy to use on a docker basis.
