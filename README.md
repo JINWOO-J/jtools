@@ -4,7 +4,7 @@ A tool for managing PRep Node resources as docker container
 
 #### Latest docker tag
 [![latest tag](https://images.microbadger.com/badges/version/jinwoo/jtools.svg)](https://microbadger.com/images/jinwoo/jtools "microbadger.com")
-[![tag info](https://images.microbadger.com/badges/version/jinwoo/prep-node.svg)](https://microbadger.com/images/jinwoo/jtools "microbadger.com")
+[![tag info](https://images.microbadger.com/badges/image/jinwoo/jtools.svg)](https://microbadger.com/images/jinwoo/jtools "microbadger.com")
 
 
 #### Travis-build
