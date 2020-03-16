@@ -1,6 +1,6 @@
 REPO_HUB = jinwoo
 NAME = jtools
-VERSION = 0.3
+VERSION = 0.5
 
 ifdef version
 VERSION = $(version)

@@ -67,8 +67,9 @@ def findFastestRegion():
         if time is not None:
             if len(last_latency) == 0:
                 last_latency = data
-            if last_latency.get("time", 99999) >= data.get("time"):
-                last_latency = data
+            if last_latency.get("time"):
+                if last_latency.get("time", 99999) >= data.get("time"):
+                    last_latency = data
         print(data) if args.verbose else False
     spinner.succeed(f'[Done] Finding fastest region')
 
@@ -80,14 +81,17 @@ def getMyip():
 
 
 def getTime(url, name="NULL"):
+    status_code = 999
     try:
         response = requests.get(f'{url}', timeout=3)
         response_text = response.text
         time = response.elapsed.total_seconds()
+        status_code = response.status_code
     except:
         time = None
         response_text = None
-    return {"url": url, "time": time, "name": name, "text": response_text}
+        cprint(f"getTime error : {url} -> {sys.exc_info()[0]}", "red")
+    return {"url": url, "time": time, "name": name, "text": response_text, "status": status_code}
 
 
 def catchMeIfYouCan(encoded_text):
