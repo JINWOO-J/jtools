@@ -511,6 +511,9 @@ def main():
     name = str(name).replace(' ', '_')
 
     myip = getMyip()
+    if len(myip) > 50: #TODO ip 가져올때 예외 처리 하기
+        myip = "NULL"
+
     upload_filename = f"{name}-{myip}-{today_time}.zip"
 
     if len(name) == 0:
