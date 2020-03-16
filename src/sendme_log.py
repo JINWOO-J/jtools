@@ -64,10 +64,11 @@ def findFastestRegion():
     last_latency = {}
     for i, p in results.items():
         data = p['data'].get()
+        print(f"data => {data}") if args.verbose else False
         if time is not None:
             if len(last_latency) == 0:
                 last_latency = data
-            if last_latency.get("time"):
+            if last_latency.get("time") and data.get("time"):
                 if last_latency.get("time", 99999) >= data.get("time"):
                     last_latency = data
         print(data) if args.verbose else False
@@ -83,7 +84,7 @@ def getMyip():
 def getTime(url, name="NULL"):
     status_code = 999
     try:
-        response = requests.get(f'{url}', timeout=3)
+        response = requests.get(f'{url}', timeout=5)
         response_text = response.text
         time = response.elapsed.total_seconds()
         status_code = response.status_code
@@ -414,11 +415,11 @@ def get_parser():
 
     parser.add_argument('-f', '--find',  action='count', help=f'Find fastest region, just checking', default=0)
     parser.add_argument('--network', type=str, help=f'Network name', choices=["MainNet", "TestNet"], default="MainNet")
-    parser.add_argument('-d', '--log-dir', metavar='log-dir', type=str,  help=f'log directory location', default=None)
-    parser.add_argument('--static-dir', metavar='static-dir', type=str,nargs="+",  help=f'include log directory location', default=None)
+    parser.add_argument('-d', '--log-dir', metavar='log-dir', type=str, help=f'log directory location', default=None)
+    parser.add_argument('--static-dir', metavar='static-dir', type=str, nargs="+",  help=f'include log directory location', default=None)
 
-    parser.add_argument('--include-dir', metavar='include-dir', type=str,nargs="+",  help=f'include log directory location', default=None)
-    parser.add_argument('--exclude-dir', metavar='exclude-dir', type=str,nargs="+",  help=f'exclude log directory location', default=None)
+    parser.add_argument('--include-dir', metavar='include-dir', type=str, nargs="+",  help=f'include log directory location', default=None)
+    parser.add_argument('--exclude-dir', metavar='exclude-dir', type=str, nargs="+",  help=f'exclude log directory location', default=None)
 
     parser.add_argument('--remove', metavar='remove', type=str, help=f'remove option', default=True)
 
@@ -428,6 +429,7 @@ def get_parser():
     parser.add_argument('-uf', '--upload-filename', type=str, help=f'upload upload mode', default=0)
     parser.add_argument('-ut', '--upload-type',  type=str, help=f'upload type',choices=["single", "multi"], default="multi")
     parser.add_argument('-v', '--verbose', action='count', help=f'verbose mode ', default=0)
+    parser.add_argument('-r', '--region', metavar="region", type=str, help=f'region ', default=None)
     return parser
 
 
@@ -540,13 +542,21 @@ def main():
     upload_filesize = getFileInfo(upload_filename).get("size")
     cprint(f'>> upload target: {args.network}/{upload_filename}, size: {upload_filesize}')
 
+
+
     if args.upload:
         answer = "y"
     else:
         answer = input("\n Are you going to upload it? It will be send to ICONLOOP's S3 (y/n)")
 
     if answer == "y":
-        region = findFastestRegion()
+        if args.region:
+            cprint(f"region => {args.region}", "green")
+            region = {'url': f'https://icon-leveldb-backup.{region_info.get(args.region)}.amazonaws.com/route_check', 'time': 0, 'name': args.region,
+             'text': 'OK\n', 'status': 200}
+        else:
+            region = findFastestRegion()
+
         bucket_code = (region_info.get( region.get("name")).split("."))[0]
         cprint(f'[OK] Fastest region -> {region.get("name")}', "green")
         kvPrint(f'bucket_code', bucket_code) if args.verbose else False
