@@ -9,3 +9,4 @@ grpcio==1.25.0
 grpcio-tools==1.25.0
 websocket-client==0.54.0
 tbears
+cryptography
