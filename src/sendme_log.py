@@ -545,8 +545,6 @@ def main():
     upload_filesize = getFileInfo(upload_filename).get("size")
     cprint(f'>> upload target: {args.network}/{upload_filename}, size: {upload_filesize}')
 
-
-
     if args.upload:
         answer = "y"
     else:

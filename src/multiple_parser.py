@@ -7,10 +7,20 @@ import calendar
 first_line = re.compile(r'^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \| (?P<severity>[^ ]*) \| (?P<logger>[^ ]*) \| (?P<location>[^ ]*) \|.*$')
 stack_trace_end = re.compile(r'^(?P<exception>[a-zA-Z]\w*)(:.*)?$')
 
-def parse_date(date):
+
+def parse_date(date: str):
     # return calendar.timegm(datetime.strptime(date, '%m%d %H:%M:%S,%f').timetuple())
-    date = f'2019{date}'
-    return datetime.strptime(date, '%Y%m%d %H:%M:%S,%f')
+    # date = f'2019{date}'
+    return datetime.strptime(date, '%Y-%m-%d %H:%M:%S,%f')
+
+
+def delete_last_lines(n=1):
+    CURSOR_UP_ONE = '\x1b[1A'
+    ERASE_LINE = '\x1b[2K'
+    for _ in range(n):
+        sys.stdout.write(CURSOR_UP_ONE)
+        sys.stdout.write(ERASE_LINE)
+
 
 class MultilineParser(object):
     ''' Possible parser state transitions:
@@ -135,55 +145,72 @@ def dump(obj, nested_level=0, output=sys.stdout):
 
 
 def test():
-    sample_log = """1204 16:47:31,038 1109 140603764938496 hxf5ef15 icon_dex SPAM slot_timer.py(67) call slot(1) delayed(False)
-1204 16:47:31,038 1109 140603764938496 hxf5ef15 icon_dex SPAM timer_service.py(78) reset_timer: TIMER_KEY_BLOCK_GENERATE
-1204 16:47:31,038 1109 140603764938496 hxf5ef15 icon_dex DEBUG consensus_siever.py(126) -------------------consensus-------------------
-1204 16:47:31,038 1109 140603764938496 hxf5ef15 icon_dex INFO consensus_siever.py(257) Votes : Votes
-True      : 6/6
-Empty     : 0/6
-Result    : True
---
-1204 16:47:31,057 1109 140603764938496 hxf5ef15 icon_dex DEBUG timer_service.py(86) TIMER IS ON (TIMER_KEY_BROADCAST_SEND_UNCONFIRMED_BLOCK)
-1204 16:47:31,057 1109 140603764938496 hxf5ef15 icon_dex DEBUG block_manager.py(915) block_manager:vote_unconfirmed_block (icon_dex/True)
-1204 16:47:31,057 1109 140603764938496 hxf5ef15 icon_dex DEBUG broadcast_scheduler.py(436) broadcast method_name(VoteUnconfirmedBlock)
-1204 16:47:31,058 1109 140603764938496 hxf5ef15 icon_dex INFO consensus_siever.py(257) Votes : Votes
-True      : 1/6
-Empty     : 5/6
+    sample_log = """ 2020-02-22 04:03:29,566 639 140034105820928 hx863e16 icon_dex DEBUG candidate_blocks.py(63) set block(086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) in CandidateBlock
+2020-02-22 04:03:29,566 639 140034105820928 hx863e16 icon_dex DEBUG timer_service.py(86) TIMER IS ON (TIMER_KEY_BROADCAST_SEND_UNCONFIRMED_BLOCK)
+2020-02-22 04:03:29,566 639 140034105820928 hx863e16 icon_dex DEBUG block_manager.py(898) vote_unconfirmed_block() (15239812/Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc)/True)
+2020-02-22 04:03:29,567 639 140034105820928 hx863e16 icon_dex DEBUG broadcast_scheduler.py(399) broadcast method_name(VoteUnconfirmedBlock)
+2020-02-22 04:03:29,567 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
+True      : 1/22
+Empty     : 21/22
 Result    : None
+Quorum    : 15
+block height(15239812)
 --
-1204 16:47:31,105 1109 140604438918912 hxf5ef15 icon_dex DEBUG channel_inner_service.py(795) Peer vote to : 303974(0) Hash32(0x55ec6128316fabf0fac6e2d0b9fe7c318793047a3f3e2ea27e1ce49e25d18254) from hx3e1227d9c46298325a7845d3d5198270bf6f70bc
-1204 16:47:31,114 1109 140604438918912 hxf5ef15 icon_dex DEBUG channel_inner_service.py(795) Peer vote to : 303974(0) Hash32(0x55ec6128316fabf0fac6e2d0b9fe7c318793047a3f3e2ea27e1ce49e25d18254) from hx2e3ad976ef8dddc579d5e24d23a130e975652240
-1204 16:47:31,120 1109 140604438918912 hxf5ef15 icon_dex DEBUG channel_inner_service.py(795) Peer vote to : 303974(0) Hash32(0x55ec6128316fabf0fac6e2d0b9fe7c318793047a3f3e2ea27e1ce49e25d18254) from hx62101ec10da3e68c9947ddd30c9c9df30e2deacd
-1204 16:47:31,259 1109 140603764938496 hxf5ef15 icon_dex INFO consensus_siever.py(257) Votes : Votes
-True      : 6/6
-Empty     : 0/6
-Result    : True
+2020-02-22 07:59:37,504 640 139819749623552 hx863e16 icon_dex DEBUG block_manager.py(495) __add_block_by_sync :: height(15245556) hash(Hash32(0x22a3354dcea056bfa3da84f587544196fd464b69d122a7338e1c361c5963273e))
+2020-02-22 07:59:37,512 640 139819749623552 hx863e16 icon_dex WARNING block_manager.py(613) fail block height sync: (<class 'loopchain.jsonrpc.exception.GenericJsonRpcServerError'>, GenericJsonRpcServerError(None))
+2020-02-22 07:59:37,512 640 139819749623552 hx863e16 icon_dex WARNING block_manager.py(681) exception during block_height_sync :: <class 'loopchain.jsonrpc.exception.GenericJsonRpcServerError'>, None
 --
-1204 16:47:33,040 1109 140603764938496 hxf5ef15 icon_dex SPAM slot_timer.py(67) call slot(1) delayed(False)
-1204 16:47:33,040 1109 140603764938496 hxf5ef15 icon_dex SPAM timer_service.py(78) reset_timer: TIMER_KEY_BLOCK_GENERATE
-1204 16:47:33,040 1109 140603764938496 hxf5ef15 icon_dex DEBUG consensus_siever.py(126) -------------------consensus-------------------
-1204 16:47:33,040 1109 140603764938496 hxf5ef15 icon_dex INFO consensus_siever.py(257) Votes : Votes
-True      : 6/6
-Empty     : 0/6
-Result    : True
---
-1204 16:47:33,066 1109 140603764938496 hxf5ef15 icon_dex DEBUG timer_service.py(86) TIMER IS ON (TIMER_KEY_BROADCAST_SEND_UNCONFIRMED_BLOCK)
-1204 16:47:33,066 1109 140603764938496 hxf5ef15 icon_dex DEBUG block_manager.py(915) block_manager:vote_unconfirmed_block (icon_dex/True)
-1204 16:47:33,066 1109 140603764938496 hxf5ef15 icon_dex DEBUG broadcast_scheduler.py(436) broadcast method_name(VoteUnconfirmedBlock)
-1204 16:47:33,067 1109 140603764938496 hxf5ef15 icon_dex INFO consensus_siever.py(257) Votes : Votes
-True      : 1/6
-Empty     : 5/6
+2020-02-22 04:03:29,749 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxdc35f82a3a943e040ae2b9ab2baa2118781b2bc9
+2020-02-22 04:03:29,760 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx3aa778e1f00c77d3490e9e625f1f83ed26f90133
+2020-02-22 04:03:29,762 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfc56203484921c3b7a4dee9579d8614d8c8daaf5
+2020-02-22 04:03:29,764 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx54d6f19c3d16b2ef23c09c885ca1ba776aaa80e2
+2020-02-22 04:03:29,765 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx4a43790d44b07909d20fbcc233548fc80f7a4067
+2020-02-22 04:03:29,768 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
+True      : 9/22
+Empty     : 13/22
 Result    : None
-1204 17:50:49,872 1109 140603764938496 hxf5ef15 icon_dex DEBUG timer_service.py(86) TIMER IS ON (TIMER_KEY_BROADCAST_SEND_UNCONFIRMED_BLOCK)
-1204 17:50:49,872 1109 140603764938496 hxf5ef15 icon_dex DEBUG block_manager.py(915) block_manager:vote_unconfirmed_block (icon_dex/True)
-1204 17:50:49,873 1109 140603764938496 hxf5ef15 icon_dex DEBUG broadcast_scheduler.py(436) broadcast method_name(VoteUnconfirmedBlock)
-1204 17:50:49,873 1109 140603764938496 hxf5ef15 icon_dex INFO consensus_siever.py(257) Votes : Votes
-True      : 1/6
-Empty     : 5/6
-Result    : None    
+Quorum    : 15
+block height(15239812)
+--
+--
+2020-02-22 04:03:29,889 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfba37e91ccc13ec1dab115811f73e429cde44d48
+2020-02-22 04:03:29,896 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2
+2020-02-22 04:03:29,911 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx0b047c751658f7ce1b2595da34d57a0e7dad357d
+2020-02-22 04:03:29,924 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxf75bfd0df8d96ee0963965135af2485cee6d5000
+2020-02-22 04:03:29,927 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxc93a0be07e8a74d9a86d8b12e569b91154681bc8
+2020-02-22 04:03:29,969 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
+True      : 22/22
+Empty     : 0/22
+Result    : True
+Quorum    : 15
+block height(15239812)
+2020-02-22 04:03:29,889 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfba37e91ccc13ec1dab115811f73e429cde44d48
+2020-02-22 04:03:29,896 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2
+2020-02-22 04:03:29,911 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx0b047c751658f7ce1b2595da34d57a0e7dad357d
+2020-02-22 04:03:29,924 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxf75bfd0df8d96ee0963965135af2485cee6d5000
+2020-02-22 04:03:29,927 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxc93a0be07e8a74d9a86d8b12e569b91154681bc8
+2020-02-22 04:03:29,969 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
+True      : 22/22
+Empty     : 0/22
+Result    : True
+Quorum    : 15
+block height(15239812)
+2020-02-22 04:03:29,889 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfba37e91ccc13ec1dab115811f73e429cde44d48
+2020-02-22 04:03:29,896 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2
+2020-02-22 04:03:29,911 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx0b047c751658f7ce1b2595da34d57a0e7dad357d
+2020-02-22 04:03:29,924 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxf75bfd0df8d96ee0963965135af2485cee6d5000
+2020-02-22 04:03:29,927 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxc93a0be07e8a74d9a86d8b12e569b91154681bc8
+2020-02-22 04:03:29,969 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
+True      : 22/22
+Empty     : 0/22
+Result    : True
+Quorum    : 15
+block height(15239812)
 
 """
-    first_line = re.compile(r'^(?P<timestamp>\d{2}\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<pid>\d+) (?P<thread_id>\d+) (?P<peer_id>\w{8}) (?P<channel>\w+) (?P<level>[^ ]*) (?P<file>[^ ]*) (?P<message>.*)$')
+
+    # first_line = re.compile(r'^(?P<timestamp>\d{2}\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<pid>\d+) (?P<thread_id>\d+) (?P<peer_id>\w{8}) (?P<channel>\w+) (?P<level>[^ ]*) (?P<file>[^ ]*) (?P<message>.*)$')
+    first_line = re.compile(r'^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<pid>\d+) (?P<thread_id>\d+) (?P<peer_id>\w{8}) (?P<channel>\w+) (?P<level>[^ ]*) (?P<file>[^ ]*) (?P<message>.*)$')
     vote_line = re.compile(r'^(?P<vote>[a-zA-Z]\w*)(\s+)(:(?P<state>.*))?$')
     find_vote = {}
 
@@ -193,6 +220,7 @@ Result    : None
             data = match.groupdict()
             if "Votes : Votes" in data.get('message'):
                 find_vote = data
+                print(f"\n{find_vote['timestamp']}", end=" ")
         else:
             match = vote_line.match(line)
             if match:
@@ -202,13 +230,8 @@ Result    : None
                     vote_state = data.get('state').split("/")
                     data['vote_count'] = vote_state[0]
                     data['vote_total'] = vote_state[1]
-
                 data['pretty_date'] = parse_date(find_vote.get("timestamp"))
-                dump(data)
-
-
-
-
+                print(f"{data['vote']}: {vote_state[0]}/{vote_state[1]} ", end=", ")
 
 
 if __name__ == '__main__':

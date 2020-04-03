@@ -6,4 +6,5 @@ if [[ ! -d "data" ]];then
 fi
 
 docker pull jinwoo/jtools
-docker run -it --rm -v ${PWD}/data:/data jinwoo/jtools sendme_log.py -d /data --upload-type multi $@
+#docker run -it --rm -v ${PWD}/data:/data jinwoo/jtools sendme_log.py -d /data --upload-type multi $@
+docker run -it --rm -v ${PWD}/src:/src -v ${PWD}/data:/data jinwoo/jtools sendme_log.py -d /data --upload-type multi $@

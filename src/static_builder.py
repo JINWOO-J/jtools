@@ -1,14 +1,50 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from termcolor import cprint
 import subprocess
 import json
 import argparse, binascii, sys, os
 import timeit
+import requests
+from termcolor import cprint
 from halo import Halo
 
 # args.default_dir = "/build"
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    WHITE = '\033[97m'
+
+def dump(obj, nested_level=0, output=sys.stdout):
+    spacing = '   '
+    def_spacing = '   '
+    if type(obj) == dict:
+        print ('%s{' % ( def_spacing + (nested_level) * spacing ))
+        for k, v in obj.items():
+            if hasattr(v, '__iter__'):
+                print ( bcolors.OKGREEN + '%s%s:' % (def_spacing +(nested_level + 1) * spacing, k) + bcolors.ENDC, end="")
+                dump(v, nested_level + 1, output)
+            else:
+                # print >>  bcolors.OKGREEN + '%s%s: %s' % ( (nested_level + 1) * spacing, k, v) + bcolors.ENDC
+                print ( bcolors.OKGREEN + '%s%s:' % (def_spacing + (nested_level + 1) * spacing, k) + bcolors.WARNING + ' %s' % v + bcolors.ENDC, file=output)
+        print ('%s}' % ( def_spacing + nested_level * spacing), file=output)
+    elif type(obj) == list:
+        print  ('%s[' % (def_spacing+ (nested_level) * spacing), file=output)
+        for v in obj:
+            if hasattr(v, '__iter__'):
+                dump(v, nested_level + 1, output)
+            else:
+                print ( bcolors.WARNING + '%s%s' % ( def_spacing + (nested_level + 1) * spacing, v) + bcolors.ENDC, file=output)
+        print ('%s]' % ( def_spacing + (nested_level) * spacing), file=output)
+    else:
+        print (bcolors.WARNING + '%s%s' %  ( def_spacing + nested_level * spacing, obj) + bcolors.ENDC)
 
 def openJson(filename):
     try:
@@ -24,16 +60,6 @@ def openJson(filename):
     return result
 
 def kvPrint(key, value, color="yellow"):
-    class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-
     key_width = 9
     key_value = 3
 
@@ -43,18 +69,8 @@ def kvPrint(key, value, color="yellow"):
 def run_execute(text, cmd, cwd=None, status_check="OK"):
     global args
 
-    class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-
     if args.verbose:
-        spinner = Halo(text=text, spinner='dots')
+        spinner = Halo(text=bcolors.WHITE + text + bcolors.ENDC, spinner='dots')
         spinner.start()
     start = timeit.default_timer()
     res = subprocess.call(cmd, cwd=cwd, stdout=None, stderr=None, shell=True)
@@ -106,25 +122,40 @@ def git_clone(repo_name, url, revision=None):
     os.chdir(pwd)
 
 
+def getConfigFile(config=None):
+    if config is not None:
+        res = requests.get(f"https://networkinfo.solidwallet.io/conf/{config}.json")
+        package_info = res.json().get("package_info")
+        return package_info
+
+
 def main():
     global args
     parser = argparse.ArgumentParser(description='Command Line Interface for deploy ')
     parser.add_argument('-v', '--verbose', action='count', help=f'verbose mode. view level', default=1)
     parser.add_argument('-d', '--default-dir', type=str, help=f'working directory', default="/build")
     parser.add_argument('-o', '--output-dir', type=str, help=f'output directory', default="/build/output")
+    parser.add_argument('-c', '--config', type=str, help=f'get config file', choices=["mainnet", "testnet", "zicon", "bicon"], default=None)
 
     args = parser.parse_args()
 
-    version_info_file = f'{args.default_dir}/static_version_info.json'
-    if os.path.isfile(version_info_file) is False:
-        if os.path.isdir(args.default_dir) is False:
-            os.mkdir(args.default_dir)
-        run_execute("static_vesion_info.json not found.", f'cp /src/static_version_info.json {version_info_file}')
+    if args.config is not None:
+        print(f"using config : {args.config}")
+        version_info = getConfigFile(args.config)
 
-    if os.path.isdir(args.output_dir) is False:
-        os.mkdir(args.output_dir)
+    else:
+        version_info_file = f'{args.default_dir}/static_version_info.json'
+        if os.path.isfile(version_info_file) is False:
+            if os.path.isdir(args.default_dir) is False:
+                os.mkdir(args.default_dir)
+            run_execute("static_vesion_info.json not found.", f'cp /src/static_version_info.json {version_info_file}')
 
-    version_info = openJson(f"{version_info_file}")
+        if os.path.isdir(args.output_dir) is False:
+            os.mkdir(args.output_dir)
+        version_info = openJson(f"{version_info_file}")
+
+    dump(version_info)
+
     which_git = run_execute("find git", "which git", status_check="No")
 
     if which_git != 0:

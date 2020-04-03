@@ -1,6 +1,6 @@
 REPO_HUB = jinwoo
 NAME = jtools
-VERSION = 0.5
+VERSION = 0.6
 
 ifdef version
 VERSION = $(version)
@@ -24,11 +24,11 @@ define colorecho
 endef
 
 TAGNAME = $(VERSION)
+NO_COLOR=\033[0m
+OK_COLOR=\033[32m
+ERROR_COLOR=\033[1;31m
+WARN_COLOR=\033[93m
 
-NO_COLOR=\x1b[0m
-OK_COLOR=\x1b[32;01m
-ERROR_COLOR=\x1b[31;01m
-WARN_COLOR=\x1b[33;01m
 OK_STRING=$(OK_COLOR)[OK]$(NO_COLOR)
 ERROR_STRING=$(ERROR_COLOR)[ERRORS]$(NO_COLOR)
 WARN_STRING=$(WARN_COLOR)[WARNINGS]$(NO_COLOR)
@@ -39,11 +39,10 @@ all: build_slim builder
 hub: push_hub tag_latest
 
 print_version:
-	@echo "$(OK_COLOR) VERSION-> $(VERSION)  REPO-> $(REPO_HUB)/$(NAME):$(TAGNAME) $(NO_COLOR) IS_LOCAL: $(IS_LOCAL)"
-
+	@printf "$(OK_COLOR) VERSION-> $(VERSION)  REPO-> $(REPO_HUB)/$(NAME):$(TAGNAME) $(NO_COLOR) IS_LOCAL: $(IS_LOCAL) \n"
 
 make_build_args:
-	@$(shell echo "$(OK_COLOR) ----- Build Environment ----- \n $(NO_COLOR)" >&2)\
+	@$(shell printf "$(OK_COLOR) ----- Build Environment ----- \n $(NO_COLOR) \n" >&2)\
 	   $(shell echo "" > BUILD_ARGS) \
 		$(foreach V, \
 			 $(sort $(.VARIABLES)), \
@@ -51,7 +50,7 @@ make_build_args:
 				 $(filter-out environment% default automatic, $(origin $V) ), \
 				 	 $($V=$($V)) \
 				 $(if $(filter-out "SHELL" "%_COLOR" "%_STRING" "MAKE%" "colorecho" ".DEFAULT_GOAL" "CURDIR", "$V" ),  \
-					$(shell echo '$(OK_COLOR)  $V=$(WARN_COLOR)$($V) $(NO_COLOR) ' >&2;) \
+					$(shell printf '$(OK_COLOR)  $V=$(WARN_COLOR)$($V) $(NO_COLOR) \n' >&2;) \
 				 	$(shell echo "--build-arg $V=$($V)  " >> BUILD_ARGS)\
 				  )\
 			  )\
@@ -124,7 +123,7 @@ bbash: make_build_args print_version
 		docker run  -it --net=host -v $(PWD)/:/mount -v $(PWD)/data:/data -v $(PWD)/build:/build -e VERSION=$(TAGNAME) -v $(PWD)/src:/src --entrypoint /bin/bash --name $(NAME)-builder --rm $(REPO_HUB)/$(NAME)-builder:$(TAGNAME)
 
 list:
-		@echo "$(OK_COLOR) Tag List - $(REPO_HUB)/$(NAME) $(NO_COLOR)"
+		@printf "$(OK_COLOR) Tag List - $(REPO_HUB)/$(NAME) $(NO_COLOR) \n"
 		@curl -s  https://registry.hub.docker.com/v1/repositories/$(REPO_HUB)/$(NAME)/tags | jq --arg REPO "$(REPO_HUB)/$(NAME):" -r '.=("\($$REPO)"+.[].name)'
 		$(call colorecho, "-- END --")
 

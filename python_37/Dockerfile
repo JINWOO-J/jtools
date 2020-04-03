@@ -30,7 +30,8 @@ ENV REMOVE_PACKAGE "gcc-6 libgl1-mesa-dri shared-mime-info gcc g++* g++-6* make 
 ENV UTIL_PACKAGE ""
 RUN if [ "${IS_LOCAL}" = "true" ]; then \
         echo "-- KR mirror" ;\
-        sed -i.bak -re "s/([a-z]{2}.)?archive.ubuntu.com|security.ubuntu.com|deb.debian.org|security\-cdn.debian.org|security.debian.org/mirror.kakao.com/g" /etc/apt/sources.list; \
+#        sed -i.bak -re "s/([a-z]{2}.)?archive.ubuntu.com|security.ubuntu.com|deb.debian.org|security\-cdn.debian.org|security.debian.org/mirror.kakao.com/g" /etc/apt/sources.list; \
+        sed -i.bak -re "s/([a-z]{2}.)?archive.ubuntu.com|security.ubuntu.com|deb.debian.org|security\-cdn.debian.org/mirror.kakao.com/g" /etc/apt/sources.list; \
     else \
         echo "-- Global mirror" ;\
         rm -f /etc/pip.conf ; \
