@@ -101,7 +101,26 @@ It is installed as a package based on network_info. (https://github.com/jinwoo-j
 If you set zicon as in the example below, it is downloaded from "https://networkinfo.solidwallet.io/conf/zicon.json".
 
 ```
-$ docker run -it -v ${PWD}/build:/build jinwoo/jtools-builder static_builder.py  -z zicon  # mainnet, testnet, zicon ...
+$ docker run -it -v ${PWD}/build:/build jinwoo/jtools-builder static_builder.py  -c zicon  # mainnet, testnet, zicon ...
+
+   {
+      loopchain:      {
+         url:         https://github.com/icon-project/loopchain
+         revision:         2.5.2
+      }
+      iconservice:      {
+         url:         https://github.com/icon-project/icon-service
+         revision:         1.6.1
+      }
+      iconrpcserver:      {
+         url:         https://github.com/icon-project/icon-rpc-server
+         revision:         1.4.9
+      }
+      icon_rc:      {
+         url:         https://github.com/icon-project/rewardcalculator
+         revision:         v1.2.1
+      }
+   }
 
 2020-04-01 17:30:20 eefc37cdb6b2fe181853746d1ad24fc44b8a9fc9  - (HEAD -> 1.6.1, tag: 1.6.1, origin/master, origin/HEAD, master)  Merge pull request #434 from icon-project/release-1.6.1 (2 days ago) <Chiwon Cho>
 ✔ [DONE] Build iconservice , work_path=/build/iconservice -> 0.002sec
@@ -120,7 +139,7 @@ $ docker run -it -v ${PWD}/build:/build jinwoo/jtools-builder static_builder.py 
 
 ```
 ## jtools docker setting
-###### made date at 2020-04-03 15:24:12 
+###### made date at 2020-04-03 17:10:21 
 ## Included files
 ### python libs
 ```
