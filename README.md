@@ -119,10 +119,8 @@ $ docker run -it -v ${PWD}/build:/build jinwoo/jtools-builder static_builder.py 
 	 /build/output/rctool
 
 ```
-
-
 ## jtools docker setting
-###### made date at 2020-01-03 14:50:02 
+###### made date at 2020-04-03 15:24:12 
 ## Included files
 ### python libs
 ```
@@ -141,7 +139,7 @@ tbears
 cryptography
 ```
 ### static_version_info.json
-`static_version_info.json`'s example
+static_version_info.json
 ```
 {
   "iconcommons": {
@@ -154,11 +152,11 @@ cryptography
   },
   "loopchain": {
     "url": "https://github.com/icon-project/loopchain",
-    "revision": "2.4.20"
+    "revision": "2.5.1"
   },
   "iconservice": {
     "url": "https://github.com/icon-project/icon-service",
-    "revision": "v1.5.20"
+    "revision": "v1.6.0"
   },
   "iconrpcserver": {
     "url": "https://github.com/icon-project/icon-rpc-server",
@@ -166,7 +164,7 @@ cryptography
   },
   "icon_rc": {
     "url": "https://github.com/icon-project/rewardcalculator",
-    "revision": "v1.2.0"
+    "revision": "v1.2.1"
   }
 }
 ```

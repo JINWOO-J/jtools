@@ -2,6 +2,15 @@
 
 A tool for managing PRep Node resources as docker container
 
+#### Latest docker tag
+[![latest tag](https://images.microbadger.com/badges/version/jinwoo/jtools.svg)](https://microbadger.com/images/jinwoo/jtools "microbadger.com")
+[![tag info](https://images.microbadger.com/badges/image/jinwoo/jtools.svg)](https://microbadger.com/images/jinwoo/jtools "microbadger.com")
+
+
+#### Travis-build
+[![Master Build Status](https://travis-ci.org/JINWOO-J/jtools.svg?branch=master)](https://travis-ci.org/JINWOO-J/jtools) 
+[![Build History](https://buildstats.info/travisci/chart/jinwoo-j/jtools?branch=master&includeBuildsFromPullRequest=false&buildCount=30)](https://travis-ci.org/jinwoo-j/jtools)
+
 ## What's jtools
 
 We've made it easy to use on a docker basis.
@@ -59,7 +68,7 @@ The build directory should contain `static_version_info.json`,
 The `whl` file is created in` build / output`.
 
 ```
-$ docker run -it -v ${PWD}/build:/build jinwoo/jtools-builder stastic_builder.py  
+$ docker run -it -v ${PWD}/build:/build jinwoo/jtools-builder static_builder.py  
  iconcommons ,  https://github.com/icon-project/icon-commons , v.1.1.2
 
 Repository Name : iconcommons
@@ -88,4 +97,25 @@ Repository Name : iconcommons
 
 ```
 
+It is installed as a package based on network_info. (https://github.com/jinwoo-j/icon_network_info) <br>
+If you set zicon as in the example below, it is downloaded from "https://networkinfo.solidwallet.io/conf/zicon.json".
 
+```
+$ docker run -it -v ${PWD}/build:/build jinwoo/jtools-builder static_builder.py  -z zicon  # mainnet, testnet, zicon ...
+
+2020-04-01 17:30:20 eefc37cdb6b2fe181853746d1ad24fc44b8a9fc9  - (HEAD -> 1.6.1, tag: 1.6.1, origin/master, origin/HEAD, master)  Merge pull request #434 from icon-project/release-1.6.1 (2 days ago) <Chiwon Cho>
+✔ [DONE] Build iconservice , work_path=/build/iconservice -> 0.002sec
+✔ [DONE] Install python dependencies , pip3 install -q -r requirements.txt -> 0.715sec
+⠏ Build a wheel filerunning bdist_wheel
+                    .
+                    .
+                    .
+                    .
+	--- output files---
+	 /build/output/loopchain-2.5.2-py3-none-any.whl
+	 /build/output/iconservice-1.6.1-py3-none-any.whl
+	 /build/output/iconrpcserver-1.4.9-py3-none-any.whl
+	 /build/output/icon_rc
+	 /build/output/rctool
+
+```

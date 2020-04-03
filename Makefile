@@ -132,6 +132,7 @@ change_docker:
 
 gendocs:
 	@$(shell ./makeMakeDown.sh)
+	@$(shell curl -X POST https://hooks.microbadger.com/images/jinwoo/jtools/UBozQngapoP2bXFBGJsHhZ_jFbQ=)
 #	@$(foreach image, prep-node, \
 #	    echo "## $(image) docker setting" >README.md ;\
 #		cat src/entrypoint.sh  | grep ^export | grep -v except| cut -d "=" -f 1 | sed 's/export//g' | sed 's/_/\\_/g' | sed -e 's/^/\|/' > text1 ;\
