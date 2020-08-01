@@ -25,7 +25,7 @@ RUN mkdir -p /usr/share/man/man1 /usr/share/man/man7
 ENV INSTALL_PACKAGE "make gcc libssl-dev  \
                    tk-dev libffi-dev liblzma-dev automake git g++"
 #ENV MANDATORY_PACKAGE "libsecp256k1-dev pigz git curl pkg-config"
-ENV MANDATORY_PACKAGE "libsecp256k1-dev pigz pkg-config curl"
+ENV MANDATORY_PACKAGE "libsecp256k1-dev pigz pkg-config curl libcurl4-openssl-dev"
 ENV REMOVE_PACKAGE "gcc-6 libgl1-mesa-dri shared-mime-info gcc g++* g++-6* make git automake"
 ENV UTIL_PACKAGE ""
 RUN if [ "${IS_LOCAL}" = "true" ]; then \

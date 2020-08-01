@@ -1,5 +1,5 @@
 
 --build-arg NAME=jtools  
 --build-arg REPO_HUB=jinwoo  
---build-arg TAGNAME=0.6  
---build-arg VERSION=0.6  
+--build-arg TAGNAME=0.7  
+--build-arg VERSION=0.7  
