@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import re, sys
 from datetime import datetime
+import argparse
+import subprocess
 import calendar
 
 
@@ -110,6 +112,15 @@ class MultilineParser(object):
         else:
             self.looking_for_start(line)
 
+
+def get_parser():
+    parser = argparse.ArgumentParser(description='Change peer_id to hostname in the loopchain log file')
+    # positional argument for command
+    parser.add_argument('command', nargs='?', help='cat, tail', default="cat")
+    parser.add_argument('--logfile', metavar='logfile', help=f'log file', default="/app/prep/data/loopchain/log/loopchain.channel.icon_dex.log")
+    return parser
+
+
 def dump(obj, nested_level=0, output=sys.stdout):
     class bcolors:
         HEADER = '\033[95m'
@@ -145,72 +156,23 @@ def dump(obj, nested_level=0, output=sys.stdout):
 
 
 def test():
-    sample_log = """ 2020-02-22 04:03:29,566 639 140034105820928 hx863e16 icon_dex DEBUG candidate_blocks.py(63) set block(086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) in CandidateBlock
-2020-02-22 04:03:29,566 639 140034105820928 hx863e16 icon_dex DEBUG timer_service.py(86) TIMER IS ON (TIMER_KEY_BROADCAST_SEND_UNCONFIRMED_BLOCK)
-2020-02-22 04:03:29,566 639 140034105820928 hx863e16 icon_dex DEBUG block_manager.py(898) vote_unconfirmed_block() (15239812/Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc)/True)
-2020-02-22 04:03:29,567 639 140034105820928 hx863e16 icon_dex DEBUG broadcast_scheduler.py(399) broadcast method_name(VoteUnconfirmedBlock)
-2020-02-22 04:03:29,567 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
-True      : 1/22
-Empty     : 21/22
-Result    : None
-Quorum    : 15
-block height(15239812)
---
-2020-02-22 07:59:37,504 640 139819749623552 hx863e16 icon_dex DEBUG block_manager.py(495) __add_block_by_sync :: height(15245556) hash(Hash32(0x22a3354dcea056bfa3da84f587544196fd464b69d122a7338e1c361c5963273e))
-2020-02-22 07:59:37,512 640 139819749623552 hx863e16 icon_dex WARNING block_manager.py(613) fail block height sync: (<class 'loopchain.jsonrpc.exception.GenericJsonRpcServerError'>, GenericJsonRpcServerError(None))
-2020-02-22 07:59:37,512 640 139819749623552 hx863e16 icon_dex WARNING block_manager.py(681) exception during block_height_sync :: <class 'loopchain.jsonrpc.exception.GenericJsonRpcServerError'>, None
---
-2020-02-22 04:03:29,749 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxdc35f82a3a943e040ae2b9ab2baa2118781b2bc9
-2020-02-22 04:03:29,760 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx3aa778e1f00c77d3490e9e625f1f83ed26f90133
-2020-02-22 04:03:29,762 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfc56203484921c3b7a4dee9579d8614d8c8daaf5
-2020-02-22 04:03:29,764 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx54d6f19c3d16b2ef23c09c885ca1ba776aaa80e2
-2020-02-22 04:03:29,765 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx4a43790d44b07909d20fbcc233548fc80f7a4067
-2020-02-22 04:03:29,768 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
-True      : 9/22
-Empty     : 13/22
-Result    : None
-Quorum    : 15
-block height(15239812)
---
---
-2020-02-22 04:03:29,889 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfba37e91ccc13ec1dab115811f73e429cde44d48
-2020-02-22 04:03:29,896 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2
-2020-02-22 04:03:29,911 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx0b047c751658f7ce1b2595da34d57a0e7dad357d
-2020-02-22 04:03:29,924 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxf75bfd0df8d96ee0963965135af2485cee6d5000
-2020-02-22 04:03:29,927 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxc93a0be07e8a74d9a86d8b12e569b91154681bc8
-2020-02-22 04:03:29,969 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
-True      : 22/22
-Empty     : 0/22
-Result    : True
-Quorum    : 15
-block height(15239812)
-2020-02-22 04:03:29,889 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfba37e91ccc13ec1dab115811f73e429cde44d48
-2020-02-22 04:03:29,896 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2
-2020-02-22 04:03:29,911 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx0b047c751658f7ce1b2595da34d57a0e7dad357d
-2020-02-22 04:03:29,924 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxf75bfd0df8d96ee0963965135af2485cee6d5000
-2020-02-22 04:03:29,927 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxc93a0be07e8a74d9a86d8b12e569b91154681bc8
-2020-02-22 04:03:29,969 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
-True      : 22/22
-Empty     : 0/22
-Result    : True
-Quorum    : 15
-block height(15239812)
-2020-02-22 04:03:29,889 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxfba37e91ccc13ec1dab115811f73e429cde44d48
-2020-02-22 04:03:29,896 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2
-2020-02-22 04:03:29,911 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hx0b047c751658f7ce1b2595da34d57a0e7dad357d
-2020-02-22 04:03:29,924 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxf75bfd0df8d96ee0963965135af2485cee6d5000
-2020-02-22 04:03:29,927 639 140034616854272 hx863e16 icon_dex DEBUG channel_inner_service.py(776) Peer vote to: 15239812(0) Hash32(0x086368b4685afe9ecda2b057a42d175fe22b652ca26b4ef7de8ef40e458e51cc) from hxc93a0be07e8a74d9a86d8b12e569b91154681bc8
-2020-02-22 04:03:29,969 639 140034105820928 hx863e16 icon_dex INFO consensus_siever.py(255) Votes : Votes
-True      : 22/22
-Empty     : 0/22
-Result    : True
-Quorum    : 15
-block height(15239812)
+    sample_log = """2020-12-30 00:01:57,131 588 140200854329088 hxd9e8a1 icon_dex DEBUG    [epoch.py:set_epoch_leader:86] height(743328) leader_id(hx8573a132f3df5c34a292fc16cb33737ffe10b367)
+2020-12-30 00:01:57,131 588 140200854329088 hxd9e8a1 icon_dex DEBUG    [epoch.py:new_round:60] new round 0, 0
+
+2020-12-30 00:01:09,478 588 140200862721792 hxd9e8a1 icon_dex DEBUG    [rest_client.py:call_async:146] REST call async complete method_name(node_getBlockByHeight)
+2020-12-30 00:01:09,479 588 140200862721792 hxd9e8a1 icon_dex DEBUG    [block_sync.py:_request_completed:338] block_height(743175) received
+2020-12-30 00:01:09,479 588 140200862721792 hxd9e8a1 icon_dex DEBUG    [block_sync.py:_citizen_request:373] request heights: odict_keys([743176]), size: 1
+2020-12-30 00:01:09,479 588 140200862721792 hxd9e8a1 icon_dex DEBUG    [block_sync.py:_block_sync:477] try add block height: 743175
+2020-12-30 00:01:09,479 588 140200862721792 hxd9e8a1 icon_dex DEBUG    [block_sync.py:_block_sync:484] max_height: 5910020, max_block_height: 5910020, unconfirmed_block_height: -1, confirm_info count: 22
+2020-12-30 00:01:09,480 588 140200854329088 hxd9e8a1 icon_dex DEBUG    [block_sync.py:_add_block_by_sync:582] height(743175) hash(Hash32(0xfe071ecdc5ad0699f8debdf6fa13415a3334cb78bb8c2a589787309a7e90f651))
+2020-12-30 00:01:09,501 588 140200854329088 hxd9e8a1 icon_dex DEBUG    [blockchain.py:prevent_next_block_mismatch:732] next_height: 743175
 
 """
 
     # first_line = re.compile(r'^(?P<timestamp>\d{2}\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<pid>\d+) (?P<thread_id>\d+) (?P<peer_id>\w{8}) (?P<channel>\w+) (?P<level>[^ ]*) (?P<file>[^ ]*) (?P<message>.*)$')
-    first_line = re.compile(r'^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<pid>\d+) (?P<thread_id>\d+) (?P<peer_id>\w{8}) (?P<channel>\w+) (?P<level>[^ ]*) (?P<file>[^ ]*) (?P<message>.*)$')
+    first_line = re.compile(r'^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<pid>\d+) (?P<thread_id>\d+) (?P<peer_id>\w{8}) '
+                            # r'(?P<channel>\w+) (?P<level>[^ ]*) (?P<file>[^ ]*) (?P<message>.*)$')
+                            r'(?P<channel>\w+) (?P<level>[^ ]\w+) (\s+) \[(?P<file>.*)\] (?P<message>.*)$')
     vote_line = re.compile(r'^(?P<vote>[a-zA-Z]\w*)(\s+)(:(?P<state>.*))?$')
     find_vote = {}
 
@@ -221,6 +183,9 @@ block height(15239812)
             if "Votes : Votes" in data.get('message'):
                 find_vote = data
                 print(f"\n{find_vote['timestamp']}", end=" ")
+            else:
+                dump(data)
+
         else:
             match = vote_line.match(line)
             if match:
@@ -235,4 +200,35 @@ block height(15239812)
 
 
 if __name__ == '__main__':
-    test()
+    # test()
+    parser = get_parser()
+    args = parser.parse_args()
+    result = {}
+    total_count = 0
+    if args.command == "cat":
+        f = subprocess.Popen(['cat', args.logfile],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        first_line = re.compile(r'^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (?P<pid>\d+) (?P<thread_id>\d+) (?P<peer_id>\w{8}) '                                
+                                r'(?P<channel>\w+) (?P<level>[^ ]\w+) (\s+) \[(?P<file>.*):(?P<function>.*):(?P<line>.*)\] (?P<message>.*)$')
+        for line in f.stdout:
+            line = line.decode("utf-8").rstrip('\r\n')
+            match = first_line.match(line)
+            if match:
+                data = match.groupdict()
+                if "Votes : Votes" in data.get('message'):
+                    find_vote = data
+                    print(f"\n{find_vote['timestamp']}", end=" ")
+                else:
+                    # dump(data)
+                    count_key = f"{data['file']}-{data['function']}-{data['line']}"
+                    # count_key = f"{data['function']}"
+                    if result.get(count_key) is None:
+                        result[count_key] = 0
+                    result[count_key] += 1
+                    total_count += 1
+
+    dump(result)
+    dump(dict(sorted(result.items(), key=lambda item: item[1])))
+
+    dump(f"total_line = {total_count}")

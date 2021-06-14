@@ -16,9 +16,10 @@ import requests
 from multiprocessing.pool import ThreadPool
 from timeit import default_timer
 
+version = "0.2"
 region_info = {
-    "Seoul"   : ".s3",
-    "Tokyo"   : "-jp.s3",
+    "Seoul": ".s3",
+    "Tokyo": "-jp.s3",
     "Virginia": "-va.s3",
     "Hongkong": "-hk.s3.ap-east-1",
     # "Singapore": "-sg.s3",
@@ -27,23 +28,25 @@ region_info = {
 }
 
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 def kvPrint(key, value, color="yellow"):
-    class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
     key_width = 9
     key_value = 3
     print(bcolors.OKGREEN + "{:>{key_width}} : ".format(key, key_width=key_width) + bcolors.ENDC, end="")
     print(bcolors.WARNING + "{:>{key_value}} ".format(str(value), key_value=key_value) + bcolors.ENDC)
 
 
-def findFastestRegion():
+def find_fastest_region():
     results = {}
     pool = ThreadPool(6)
     i = 0
@@ -52,10 +55,10 @@ def findFastestRegion():
     spinner.start()
 
     for region_name, region_code in region_info.items():
-        URL=f'https://icon-leveldb-backup{region_code}.amazonaws.com/route_check'
-        exec_func = "getTime"
-        exec_args = ( f"{URL}", region_name )
-        results[i]= {}
+        URL = f'https://icon-leveldb-backup{region_code}.amazonaws.com/route_check'
+        exec_func = "get_connect_time"
+        exec_args = (f"{URL}", region_name)
+        results[i] = {}
         results[i]["data"] = pool.apply_async(getattr(sys.modules[__name__], exec_func), exec_args)
         i += 1
     pool.close()
@@ -76,23 +79,24 @@ def findFastestRegion():
 
     return last_latency
 
-def getMyip():
+
+def get_my_ipaddr():
     url = 'https://ifconfig.co/ip'
-    return getTime(url).get("text").strip()
+    return get_connect_time(url).get("text").strip()
 
 
-def getTime(url, name="NULL"):
+def get_connect_time(url, name="NULL"):
     status_code = 999
     try:
         response = requests.get(f'{url}', timeout=5)
         response_text = response.text
-        time = response.elapsed.total_seconds()
+        elapsed_time = response.elapsed.total_seconds()
         status_code = response.status_code
-    except:
-        time = None
+    except Exception as e:
+        elapsed_time = None
         response_text = None
-        cprint(f"getTime error : {url} -> {sys.exc_info()[0]}", "red")
-    return {"url": url, "time": time, "name": name, "text": response_text, "status": status_code}
+        cprint(f"get_connect_time error : {url} -> {sys.exc_info()[0]} / {e}", "red")
+    return {"url": url, "time": elapsed_time, "name": name, "text": response_text, "status": status_code}
 
 
 def catchMeIfYouCan(encoded_text):
@@ -136,7 +140,7 @@ def multi_part_upload_with_s3(filename=None, key_path=None, bucket=None, upload_
         config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10,
                                 multipart_chunksize=1024 * 25, use_threads=True)
     else:
-        cprint(f"Unknown upload_type-> {upload_type}","red")
+        cprint(f"Unknown upload_type-> {upload_type}", "red")
     if filename is None:
         cprint(f"[ERROR] filename is None", "red")
         raise SystemExit()
@@ -150,7 +154,7 @@ def multi_part_upload_with_s3(filename=None, key_path=None, bucket=None, upload_
                                    )
     except Exception as e:
         e = str(e).replace(":", ":\n")
-        cprint(f"\n[ERROR] File upload fail / cause->{e}\n","red")
+        cprint(f"\n[ERROR] File upload fail / cause->{e}\n", "red")
         raise SystemExit()
 
     elapsed = default_timer() - start_time
@@ -188,7 +192,7 @@ def upload_s3(filename=None):
 
 
 def sizeof_fmt(num, suffix='B'):
-    for unit in ['','K','M','G','T','P','E','Z']:
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
@@ -196,53 +200,34 @@ def sizeof_fmt(num, suffix='B'):
 
 
 def dump(obj, nested_level=0, output=sys.stdout):
-    class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-
     spacing = '   '
     def_spacing = '   '
     if type(obj) == dict:
-        print ('%s{' % ( def_spacing + (nested_level) * spacing ))
+        print('%s{' % (def_spacing + (nested_level) * spacing))
         for k, v in obj.items():
             if hasattr(v, '__iter__'):
-                print ( bcolors.OKGREEN + '%s%s:' % (def_spacing +(nested_level + 1) * spacing, k) + bcolors.ENDC, end="")
+                print(bcolors.OKGREEN + '%s%s:' % (def_spacing + (nested_level + 1) * spacing, k) + bcolors.ENDC, end="")
                 dump(v, nested_level + 1, output)
             else:
-                print ( bcolors.OKGREEN + '%s%s:' % (def_spacing + (nested_level + 1) * spacing, k) + bcolors.WARNING + ' %s' % v + bcolors.ENDC, file=output)
-        print ('%s}' % ( def_spacing + nested_level * spacing), file=output)
+                print(bcolors.OKGREEN + '%s%s:' % (def_spacing + (nested_level + 1) * spacing, k) + bcolors.WARNING + ' %s' % v + bcolors.ENDC,
+                      file=output)
+        print('%s}' % (def_spacing + nested_level * spacing), file=output)
     elif type(obj) == list:
-        print  ('%s[' % (def_spacing+ (nested_level) * spacing), file=output)
+        print('%s[' % (def_spacing + (nested_level) * spacing), file=output)
         for v in obj:
             if hasattr(v, '__iter__'):
                 dump(v, nested_level + 1, output)
             else:
-                print ( bcolors.WARNING + '%s%s' % ( def_spacing + (nested_level + 1) * spacing, v) + bcolors.ENDC, file=output)
-        print ('%s]' % ( def_spacing + (nested_level) * spacing), file=output)
+                print(bcolors.WARNING + '%s%s' % (def_spacing + (nested_level + 1) * spacing, v) + bcolors.ENDC, file=output)
+        print('%s]' % (def_spacing + (nested_level) * spacing), file=output)
     else:
-        print (bcolors.WARNING + '%s%s' %  ( def_spacing + nested_level * spacing, obj) + bcolors.ENDC)
+        print(bcolors.WARNING + '%s%s' % (def_spacing + nested_level * spacing, obj) + bcolors.ENDC)
 
 
 def classdump(obj):
-    class bcolors:
-        HEADER = '\033[95m'
-        OKBLUE = '\033[94m'
-        OKGREEN = '\033[92m'
-        WARNING = '\033[93m'
-        FAIL = '\033[91m'
-        ENDC = '\033[0m'
-        BOLD = '\033[1m'
-        UNDERLINE = '\033[4m'
-
     for attr in dir(obj):
 
-        if hasattr( obj, attr ):
+        if hasattr(obj, attr):
             # print(bcolors.OKGREEN + "obj.%s = "+bcolors.WARNING + "%s" + bcolors.ENDC %
             #       (attr, getattr(obj, attr)))
             value = getattr(obj, attr)
@@ -267,12 +252,13 @@ class SearchDir:
     type = "dir"
     change_path = False
     exclude_dir = [".score_data", ".storage", ".git"]
+
     # def __init__(self, dirname, type, return_data=[]):
     #     self.dirname = dirname
-    def __init__(self,  return_data=[]):
+    def __init__(self, return_data=[]):
         self.return_data = []
 
-    def setExcludePath(self,path):
+    def setExcludePath(self, path):
         if type(path) == list:
             SearchDir.exclude_dir = path
         else:
@@ -310,11 +296,11 @@ class SearchDir:
             for filename in filenames:
                 is_write = 0
                 full_filename = os.path.join(self.dirname, filename)
-                file_info = getFileInfo(full_filename)
+                file_info = get_file_info(full_filename)
                 if file_info.get("type") is "dir":
                     exclude_match = False
                     for exclude in self.exclude_dir:
-                        if filename.count(exclude) > 0: # not match
+                        if filename.count(exclude) > 0:  # not match
                             exclude_match = True
                         if exclude_match is True:
                             break
@@ -336,7 +322,7 @@ class SearchDir:
         return self.return_data
 
 
-def getFileInfo(file):
+def get_file_info(file):
     if os.path.isdir(file):
         file_type = "dir"
     elif os.path.isfile(file):
@@ -344,15 +330,15 @@ def getFileInfo(file):
     try:
         file_info = os.stat(file)
         return_result = {
-            "full_filename" : file,
-            "size" :sizeof_fmt(file_info.st_size),
-            "date" : datetime.datetime.fromtimestamp(file_info.st_mtime),
-            "unixtime" : file_info.st_mtime,
+            "full_filename": file,
+            "size": sizeof_fmt(file_info.st_size),
+            "date": datetime.datetime.fromtimestamp(file_info.st_mtime),
+            "unixtime": file_info.st_mtime,
             "type": file_type
         }
     except:
         return_result = {
-            "full_filename" : file,
+            "full_filename": file,
             "size": None,
             "date": None,
             "unixtime": None,
@@ -370,7 +356,8 @@ def archive_zip(directory=None, filename=None):
                 print(file)
                 zip.write(os.path.join(folder, file),
                           os.path.relpath(os.path.join(folder, file), directory),
-                          compress_type = zipfile.ZIP_DEFLATED)
+                          compress_type=zipfile.ZIP_DEFLATED)
+
 
 def zipdir(path, ziph):
     # ziph is zipfile handle
@@ -380,7 +367,6 @@ def zipdir(path, ziph):
 
 
 def archive_zip2(filelist=[], zip_filename="archive.zip"):
-
     zip = zipfile.ZipFile(f'{zip_filename}', 'w')
 
     spinner = Halo(text=f"Archive files - {zip_filename}\n", spinner='dots')
@@ -389,8 +375,8 @@ def archive_zip2(filelist=[], zip_filename="archive.zip"):
         try:
             print(f" -> {filename}")
             zip.write(filename,
-                  os.path.relpath(filename),
-                  compress_type=zipfile.ZIP_DEFLATED)
+                      os.path.relpath(filename),
+                      compress_type=zipfile.ZIP_DEFLATED)
         except Exception as e:
             cprint(f"[ERR] {e}")
             spinner.fail(f'Fail {e}')
@@ -408,26 +394,28 @@ def extractKeyToList(listObj, key):
 
     return return_list
 
+
 def get_parser():
     ## TODO get hostname, public-ip -> bucketname = {hostname}_{public-ip} ,
     ## TODO find a fastest region -> multi bucket -> replication
     parser = argparse.ArgumentParser(description='Send me log')
 
-    parser.add_argument('-f', '--find',  action='count', help=f'Find fastest region, just checking', default=0)
+    parser.add_argument('-f', '--find', action='count', help=f'Find fastest region, just checking', default=0)
     parser.add_argument('--network', type=str, help=f'Network name', choices=["MainNet", "TestNet"], default="MainNet")
     parser.add_argument('-d', '--log-dir', metavar='log-dir', type=str, help=f'log directory location', default=None)
-    parser.add_argument('--static-dir', metavar='static-dir', type=str, nargs="+",  help=f'include log directory location', default=None)
+    parser.add_argument('--static-dir', metavar='static-dir', type=str, nargs="+", help=f'include log directory location', default=None)
 
-    parser.add_argument('--include-dir', metavar='include-dir', type=str, nargs="+",  help=f'include log directory location', default=None)
-    parser.add_argument('--exclude-dir', metavar='exclude-dir', type=str, nargs="+",  help=f'exclude log directory location', default=None)
+    parser.add_argument('--include-dir', metavar='include-dir', type=str, nargs="+", help=f'include log directory location', default=None)
+    parser.add_argument('--exclude-dir', metavar='exclude-dir', type=str, nargs="+", help=f'exclude log directory location', default=None)
 
     parser.add_argument('--remove', metavar='remove', type=str, help=f'remove option', default=True)
 
-    parser.add_argument('-td', '--target-date',  type=str, choices=["all", "today"], help=f'upload target date', default=f'today')
-    parser.add_argument('-n', '--name',  type=str, help=f'Set filename for upload ', default=None)
+    # parser.add_argument('-td', '--target-date', type=str, choices=["all", "today"], help=f'upload target date', default=f'today')
+    parser.add_argument('-td', '--target-date', type=str, help=f'upload target date', default=f'today')
+    parser.add_argument('-n', '--name', type=str, help=f'Set filename for upload ', default=None)
     parser.add_argument('-u', '--upload', action='count', help=f'force upload mode', default=0)
     parser.add_argument('-uf', '--upload-filename', type=str, help=f'upload upload mode', default=0)
-    parser.add_argument('-ut', '--upload-type',  type=str, help=f'upload type',choices=["single", "multi"], default="multi")
+    parser.add_argument('-ut', '--upload-type', type=str, help=f'upload type', choices=["single", "multi"], default="multi")
     parser.add_argument('-v', '--verbose', action='count', help=f'verbose mode ', default=0)
     parser.add_argument('-r', '--region', metavar="region", type=str, help=f'region ', default=None)
     return parser
@@ -435,17 +423,17 @@ def get_parser():
 
 def main():
     global upload_filename
-    upload_filename=None
+    upload_filename = None
     if args.find:
-        dump(findFastestRegion())
+        dump(find_fastest_region())
         raise SystemExit()
 
     if args.log_dir:
         if checkFileType(args.log_dir) == "dir":
             latest_log_dir = args.log_dir
-            latest_log_modify = getFileInfo(args.log_dir).get("date")
+            latest_log_modify = get_file_info(args.log_dir).get("date")
         else:
-            cprint(f"[ERROR] '{args.log_dir}' is not directory","red")
+            cprint(f"[ERROR] '{args.log_dir}' is not directory", "red")
             raise SystemExit()
         if args.include_dir:
             log_dir = sorted_key(SearchDir().setExcludePath(exclude_dir).setType("dir").find(), "unixtime")
@@ -460,7 +448,7 @@ def main():
             dump(log_dir)
             raise SystemExit()
 
-    logfiles=SearchDir().setType("file").setPath(latest_log_dir).find()
+    logfiles = SearchDir().setType("file").setPath(latest_log_dir).find()
 
     kvPrint("Your log directory", f'{latest_log_dir} \t\t[{latest_log_modify}]')
     kvPrint("Target date", args.target_date)
@@ -480,7 +468,7 @@ def main():
 
         exclude_match = False
         for exclude in exclude_dir:
-            if file['full_filename'].count(exclude) > 0: # not match
+            if file['full_filename'].count(exclude) > 0:  # not match
                 exclude_match = True
             if exclude_match is True:
                 break
@@ -491,13 +479,16 @@ def main():
                 if diff_date.days <= 1:
                     file_count = file_count + 1
                     target_filenames.append(file['full_filename'])
-                    print(
-                        f"[{file_count}] today :: {file['full_filename']:40}  {file['size']:10} {file['date']} ({diff_date.days})")
-            else:
+                    print(f"[{file_count}] today :: {file['full_filename']:40}  {file['size']:10} {file['date']} ({diff_date.days})")
+            elif args.target_date == "all":
                 file_count = file_count + 1
                 target_filenames.append(file['full_filename'])
-                print(
-                    f"[{file_count}] all :: {file['full_filename']:70}  {file['size']:10} {file['date']} ({diff_date.days})")
+                print(f"[{file_count}] all :: {file['full_filename']:70}  {file['size']:10} {file['date']} ({diff_date.days})")
+            else:
+                if args.target_date == date:
+                    file_count = file_count + 1
+                    target_filenames.append(file['full_filename'])
+                    print(f"[{file_count}] [{args.target_date}] :: {file['full_filename']:70}  {file['size']:10} {file['date']} ({diff_date.days})")
 
     cprint("---------------------------------------------\n", "white")
     if len(target_filenames) == 0:
@@ -510,17 +501,17 @@ def main():
 
     name = str(name).replace(' ', '_')
 
-    myip = getMyip()
-    if len(myip) > 50: #TODO ip 가져올때 예외 처리 하기
+    myip = get_my_ipaddr()
+    if len(myip) > 50:  # TODO ip 가져올때 예외 처리 하기
         myip = "NULL"
 
     upload_filename = f"{name}-{myip}-{today_time}.zip"
 
     if len(name) == 0:
-        cprint(f'[ERR] need a your prep-node name',"red")
+        cprint(f'[ERR] need a your prep-node name', "red")
         raise SystemExit()
-    elif any( string in name for string in "^{}?,`!@#$%^&*();:'\""):
-        cprint(f'[ERR] Can\'t using special character ( allowed : [ ] < > _ )',"red")
+    elif any(string in name for string in "^{}?,`!@#$%^&*();:'\""):
+        cprint(f'[ERR] Can\'t using special character ( allowed : [ ] < > _ )', "red")
         raise SystemExit()
 
     # if args.static_dir:
@@ -542,7 +533,7 @@ def main():
         archive_zip2(target_filenames, f"{upload_filename}")
 
     # upload_filesize = sizeof_fmt(os.stat(upload_filename).st_size)
-    upload_filesize = getFileInfo(upload_filename).get("size")
+    upload_filesize = get_file_info(upload_filename).get("size")
     cprint(f'>> upload target: {args.network}/{upload_filename}, size: {upload_filesize}')
 
     if args.upload:
@@ -554,11 +545,11 @@ def main():
         if args.region:
             cprint(f"region => {args.region}", "green")
             region = {'url': f'https://icon-leveldb-backup.{region_info.get(args.region)}.amazonaws.com/route_check', 'time': 0, 'name': args.region,
-             'text': 'OK\n', 'status': 200}
+                      'text': 'OK\n', 'status': 200}
         else:
-            region = findFastestRegion()
+            region = find_fastest_region()
 
-        bucket_code = (region_info.get( region.get("name")).split("."))[0]
+        bucket_code = (region_info.get(region.get("name")).split("."))[0]
         cprint(f'[OK] Fastest region -> {region.get("name")}', "green")
         kvPrint(f'bucket_code', bucket_code) if args.verbose else False
         multi_part_upload_with_s3(f"{upload_filename}", f"{args.network}/{upload_filename}", bucket_code, args.upload_type)
@@ -566,16 +557,17 @@ def main():
     else:
         cprint(f"\n Stopped", "red")
 
+
 def banner():
-    print("="*57)
+    print("=" * 57)
     print(' _____ _____ _____ ____  _____ _____    __    _____ _____')
     print('|   __|   __|   | |    \|     |   __|  |  |  |     |   __|')
     print('|__   |   __| | | |  |  | | | |   __|  |  |__|  |  |  |  |')
     print('|_____|_____|_|___|____/|_|_|_|_____|  |_____|_____|_____|')
-
     print("")
-    print("\t\t\t\t   by JINWOO")
-    print("="*57)
+    print(f'                                       version: {version}')
+    print("\t\t\t\t\t   by JINWOO")
+    print("=" * 57)
 
 
 # for i in range( 1, 10000000):
@@ -607,12 +599,11 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        cprint("\nKeyboardInterrupt","green")
+        cprint("\nKeyboardInterrupt", "green")
         pass
     finally:
         if upload_filename is not None and os.path.isfile(upload_filename) and args.remove:
             print(f'Remove temporary zip file -> {upload_filename}')
             os.remove(upload_filename)
-
 
     # upload_s3()
